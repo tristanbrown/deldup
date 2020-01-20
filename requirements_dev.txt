@@ -1,0 +1,7 @@
+﻿# Install the package
+-e .
+
+# Development dependencies
+pytest
+pylint
+jupyter
