@@ -4,6 +4,8 @@ import os
 
 import pandas as pd
 
+from .stats import fit_deldup
+
 class Experiment():
     def __init__(self, source):
         # I/O
@@ -18,6 +20,9 @@ class Experiment():
 
         # Outputs
         self.probe_devs = None
+        self.data_norm = None
+        self.metrics = None
+        self.models = None
 
     def extract_data(self, source):
         if isinstance(source, pd.DataFrame):
@@ -32,9 +37,9 @@ class Experiment():
 
     def analyze(self):
         self.data = self.depth_factor(self.data)
-        print(self.data.head())
-        self.data.to_csv(os.path.join(self.outpath, 'out_data.csv'))
-        self.probe_devs.to_csv(os.path.join(self.outpath, 'out_stats.csv'))
+        self.data_norm, self.metrics = self.normalize_read_depth(self.data)
+        self.models = {col: fit_deldup(self.data_norm[col]) for col in self.probe_cols}
+        self.save_outputs()
 
     def depth_factor(self, data):
         """Calculate a per-sample normalization factor for read depth."""
@@ -46,3 +51,16 @@ class Experiment():
         data['depth_factor_std'] = depth_df.std(axis=1)
         self.probe_devs = depth_df.std(axis=0).sort_values(ascending=False)
         return data
+    
+    def normalize_read_depth(self, data):
+        """Normalize the read depth."""
+        normalized = data[self.probe_cols].div(data['depth_factor'], axis=0)
+        desc = normalized.describe()
+        desc.append(pd.Series(desc.loc['std',:]/desc.loc['mean',:],name='coef_var'))
+        return normalized, desc
+
+    def save_outputs(self):
+        """Save the outputs to files."""
+        print(self.data.head())
+        self.data.to_csv(os.path.join(self.outpath, 'out_data.csv'))
+        self.probe_devs.to_csv(os.path.join(self.outpath, 'out_stats.csv'), header=False)

@@ -3,7 +3,11 @@ from setuptools import setup, find_packages
 import __about__
 
 REQUIREMENTS = [
+    'numpy',
     'pandas',
+    'matplotlib',
+    'scipy',
+    'sklearn',
 ]
 
 setup(
