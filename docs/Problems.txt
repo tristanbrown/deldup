@@ -1,0 +1,4 @@
+CNSL_probe_5: bad data
+CNSL_probe_23: bad data
+CNSL_probe_36: overlapping regions
+CNSL_probe_46: bad data
