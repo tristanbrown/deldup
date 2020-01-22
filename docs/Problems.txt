@@ -1,4 +1,6 @@
 CNSL_probe_5: bad data
+CNSL_probe_20: kmeans works
 CNSL_probe_23: bad data
-CNSL_probe_36: overlapping regions
+CNSL_probe_26: kmeans fails
+CNSL_probe_36: overlapping regions, kmeans fails slightly
 CNSL_probe_46: bad data
