@@ -1,6 +1,6 @@
 -1. check if mu1, mu2, mu3 are resolvable, based on 2x stddev.
 0. partition the data at 1.5mu and 2.5mu. if no data exists outside, then k=1. 
-1. k-means cluster (k=3) to find the central cluster
+#  1. k-means cluster (k=3) to find the central cluster
 2. for each side, partition the data 1.5 stddevs from the central cluster
 3. k-means cluster (k=2) on the truncated data to find the side clusters
 4. the highest and lowest values of the side clusters partition the data.

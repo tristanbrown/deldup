@@ -4,7 +4,7 @@ import os
 
 import pandas as pd
 
-from .stats import fit_deldup
+from .stats import model_cn, fit_gaussian, cluster, cluster_bisect
 
 class Experiment():
     def __init__(self, source):
@@ -38,8 +38,34 @@ class Experiment():
     def analyze(self):
         self.data = self.depth_factor(self.data)
         self.data_norm, self.metrics = self.normalize_read_depth(self.data)
-        self.models = {col: fit_deldup(self.data_norm[col]) for col in self.probe_cols}
+        self.models = {col: model_cn(self.data_norm[col]) for col in self.probe_cols}
         self.save_outputs()
+
+    def fit_models(self, names=None):
+        if not names:
+            names = self.probe_cols
+        for col in names:
+            print(col)
+            fit_gaussian(self.models[col], visual=True)
+
+    def cluster_all(self, names=None):
+        if not names:
+            names = self.probe_cols
+        for col in names:
+            print(col)
+            clusters = cluster(self.data_norm[col], k=3)
+            fit_gaussian(clusters, visual=True)
+
+    def cluster_bisect_all(self, names=None):
+        if not names:
+            names = self.probe_cols
+        for col in names:
+            print(col)
+            try:
+                clusters = cluster_bisect(self.data_norm[col])
+                fit_gaussian(clusters, visual=True)
+            except ValueError:
+                print("FAIL")
 
     def depth_factor(self, data):
         """Calculate a per-sample normalization factor for read depth."""
@@ -56,7 +82,7 @@ class Experiment():
         """Normalize the read depth."""
         normalized = data[self.probe_cols].div(data['depth_factor'], axis=0)
         desc = normalized.describe()
-        desc.append(pd.Series(desc.loc['std',:]/desc.loc['mean',:],name='coef_var'))
+        desc = desc.append(pd.Series(desc.loc['std',:]/desc.loc['mean',:],name='coef_var'))
         return normalized, desc
 
     def save_outputs(self):
