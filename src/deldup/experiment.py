@@ -2,9 +2,10 @@ import gzip
 import csv
 import os
 
+import numpy as np
 import pandas as pd
 
-from .stats import model_cn, fit_gaussian, cluster, cluster_bisect
+from .stats import model_cn, fit_gaussian, cluster, cluster_bisect, get_bounds
 
 class Experiment():
     def __init__(self, source):
@@ -21,6 +22,8 @@ class Experiment():
         # Outputs
         self.probe_devs = None
         self.data_norm = None
+        self.data_cn = None
+        self.deldup_counts = None
         self.metrics = None
         self.models = None
 
@@ -39,7 +42,25 @@ class Experiment():
         self.data = self.depth_factor(self.data)
         self.data_norm, self.metrics = self.normalize_read_depth(self.data)
         self.models = {col: model_cn(self.data_norm[col]) for col in self.probe_cols}
+        bounds = get_bounds(self.models)
+        self.data_cn = self.categorize_cn(bounds)
+        self.deldup_counts = self.count_cn(self.data_cn)
         self.save_outputs()
+
+    def count_cn(self, data):
+        return data.groupby('ethnicity').agg(
+            {i:'value_counts' for i in self.probe_cols})
+
+    def categorize_cn(self, bounds):
+        data_cn = self.data[['ethnicity']].merge(
+            self.data_norm, how='left', left_index=True, right_index=True)
+        for col, bound in bounds.items():
+            conditions = (
+                data_cn[col] < bound[0],
+                (data_cn[col] > bound[0])&(data_cn[col] < bound[1]),
+                data_cn[col] > bound[1])
+            data_cn[col] = np.select(conditions, (1, 2, 3), default=0)
+        return data_cn
 
     def fit_models(self, names=None):
         if not names:
