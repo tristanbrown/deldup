@@ -22,8 +22,8 @@ setup(
     install_requires=REQUIREMENTS,
     python_requires='>=3.6, !=3.7.2',
     entry_points={
-        # 'console_scripts': [
-        #     'deldup = deldup.__main__:run',
-        # ]
+        'console_scripts': [
+            'deldup = deldup.__main__:run',
+        ]
     },
 )
