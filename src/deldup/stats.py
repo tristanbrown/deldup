@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -71,7 +72,9 @@ def cluster(data, k, start=None):
         start = [data.min(), data.max()]
     init = np.array(start).reshape(-1, 1)
     arr = np.array(data).reshape(-1, 1)
-    kmeans = KMeans(n_clusters=k, init=init).fit(arr)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        kmeans = KMeans(n_clusters=k, init=init).fit(arr)
     labels = kmeans.labels_
     clusters = [data[labels == label] for label in range(k)]
     return clusters

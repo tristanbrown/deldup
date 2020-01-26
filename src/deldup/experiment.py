@@ -33,6 +33,7 @@ class Experiment():
         self.deldup_counts = None
         self.metrics = None
         self.models = None
+        self.bad_probes = []
 
     def extract_data(self, source):
         if isinstance(source, pd.DataFrame):
@@ -49,6 +50,9 @@ class Experiment():
         self.data = self.depth_factor(self.data)
         self.data_norm, self.metrics = self.normalize_read_depth(self.data)
         self.models = {col: model_cn(self.data_norm[col]) for col in self.probe_cols}
+        for col, model in self.models.items():
+            if model is None:
+                self.bad_probes.append(col)
         bounds = get_bounds(self.models)
         self.data_cn = self.categorize_cn(bounds)
         self.deldup_counts = self.count_cn(self.data_cn)
@@ -131,9 +135,13 @@ class Experiment():
     def save_outputs(self):
         """Save the outputs to files."""
         print(self.data.head())
-        self.data.to_csv(os.path.join(self.outpath, 'out_data.csv'))
+        # self.data.to_csv(os.path.join(self.outpath, 'out_data.csv'))
         self.probe_devs.to_csv(os.path.join(self.outpath, 'out_stats.csv'), header=False)
         self.final_tbl.to_csv(os.path.join(self.outpath, 'deldup_percentages.csv'))
+        with open(os.path.join(self.outpath, 'bad_probes.csv'), 'w', newline='') as f:
+            writer = csv.writer(f)
+            for n in self.bad_probes:
+                writer.writerow([n])
 
 class SampleGroup():
     def __init__(self, label, source):
@@ -147,8 +155,6 @@ class SampleGroup():
 
     def get_row(self):
         perc = self.deldups / self.total * 100
-        print(perc)
         row_data = perc.stack()
         row_data.name = self.label
-        print(row_data)
         return row_data
